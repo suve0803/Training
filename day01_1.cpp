@@ -7,11 +7,8 @@ private:
     int size;     // Size of the array
 
 public:
-    // Constructor to initialize size
-    ArrayHandler() { size = 0; }
-
-    // Method to set array elements
-    void setArray() {
+    // Method to initialize the array and its size
+    void initialize() {
         cout << "Enter the size of the array: ";
         cin >> size;
 
@@ -23,40 +20,44 @@ public:
 
     // Method to find the largest element
     int findLargest() {
-        int max = arr[0];
+        int maxElement = arr[0];
         for (int i = 1; i < size; i++) {
-            if (arr[i] > max) {
-                max = arr[i];
+            if (arr[i] > maxElement) {
+                maxElement = arr[i];
             }
         }
-        return max;
+        return maxElement;
     }
 
-    // Method to sort array in ascending order
+    // Method to sort the array in ascending order (selection sort)
     void sortAscending() {
         for (int i = 0; i < size - 1; i++) {
-            for (int j = 0; j < size - i - 1; j++) {
-                if (arr[j] > arr[j + 1]) {
-                    // Swap arr[j] and arr[j+1]
-                    int temp = arr[j];
-                    arr[j] = arr[j + 1];
-                    arr[j + 1] = temp;
+            int minIndex = i;
+            for (int j = i + 1; j < size; j++) {
+                if (arr[j] < arr[minIndex]) {
+                    minIndex = j;
                 }
             }
+            // Swap the found minimum element with the current element
+            int temp = arr[i];
+            arr[i] = arr[minIndex];
+            arr[minIndex] = temp;
         }
     }
 
-    // Method to sort array in descending order
+    // Method to sort the array in descending order (selection sort)
     void sortDescending() {
         for (int i = 0; i < size - 1; i++) {
-            for (int j = 0; j < size - i - 1; j++) {
-                if (arr[j] < arr[j + 1]) {
-                    // Swap arr[j] and arr[j+1]
-                    int temp = arr[j];
-                    arr[j] = arr[j + 1];
-                    arr[j + 1] = temp;
+            int maxIndex = i;
+            for (int j = i + 1; j < size; j++) {
+                if (arr[j] > arr[maxIndex]) {
+                    maxIndex = j;
                 }
             }
+            // Swap the found maximum element with the current element
+            int temp = arr[i];
+            arr[i] = arr[maxIndex];
+            arr[maxIndex] = temp;
         }
     }
 
@@ -71,13 +72,12 @@ public:
 
 int main() {
     ArrayHandler handler;
-    handler.setArray();
+    handler.initialize();
 
-    cout << "Original Array: ";
+    cout << "\nOriginal Array: ";
     handler.display();
 
-    int largest = handler.findLargest();
-    cout << "Largest Element: " << largest << endl;
+    cout << "Largest Element: " << handler.findLargest() << endl;
 
     handler.sortAscending();
     cout << "Array in Ascending Order: ";
