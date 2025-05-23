@@ -1,19 +1,21 @@
-   #include <iostream>
+#include <iostream>
 #include <string>
 #define MAX 5
 
 using namespace std;
 
+// Employee Class
 class Employee {
 private:
     int id;
     string name;
 
 public:
-    // Constructor to initialize Employee
-    Employee(int eid = 0, string ename = "") : id(eid), name(ename) {}
+    // Setter methods
+    void setId(int eid) { id = eid; }
+    void setName(string ename) { name = ename; }
 
-    // Getters
+    // Getter methods
     int getId() const { return id; }
     string getName() const { return name; }
 
@@ -23,76 +25,79 @@ public:
     }
 };
 
+// Stack Class for Employee Objects
 class StackOp {
 private:
     int top;
     Employee arr[MAX]; // Array of Employee objects
+
 public:
-    StackOp();
-    bool push(const Employee &);
-    bool pop();
-    void display() const;
+    // Constructor
+    StackOp() { top = -1; }
+
+    // Add an Employee to the stack
+    bool push(const Employee &emp) {
+        if (top == MAX - 1) {
+            cout << "Stack is full. Cannot add more employees.\n";
+            return false;
+        }
+        arr[++top] = emp; // Add employee to stack
+        cout << "Employee added successfully.\n";
+        return true;
+    }
+
+    // Remove an Employee from the stack
+    bool pop() {
+        if (top == -1) {
+            cout << "Stack is empty. No employee to remove.\n";
+            return false;
+        }
+        cout << "Removed Employee: ";
+        arr[top--].display(); // Display and remove the top employee
+        return true;
+    }
+
+    // Display all Employees in the stack
+    void display() const {
+        if (top == -1) {
+            cout << "Stack is empty. No employees to display.\n";
+            return;
+        }
+        cout << "==== Employee List ====\n";
+        for (int i = top; i >= 0; i--) {
+            arr[i].display();
+        }
+        cout << endl;
+    }
 };
 
-// Constructor
-StackOp::StackOp() : top(-1) {}
-
-// Push operation
-bool StackOp::push(const Employee &emp) {
-    if (top == MAX - 1) {
-        cout << "Stack is full. Cannot add more employees.\n";
-        return false;
-    }
-    arr[++top] = emp; // Add employee to stack
-    cout << "Employee added successfully.\n";
-    return true;
-}
-
-// Pop operation
-bool StackOp::pop() {
-    if (top == -1) {
-        cout << "Stack is empty. No employee to remove.\n";
-        return false;
-    }
-    cout << "Removed Employee: ";
-    arr[top--].display(); // Display and remove the top employee
-    return true;
-}
-
-// Display stack contents
-void StackOp::display() const {
-    if (top == -1) {
-        cout << "Stack is empty. No employees to display.\n";
-        return;
-    }
-    cout << "==== Employee List ====\n";
-    for (int i = top; i >= 0; i--) {
-        arr[i].display();
-    }
-    cout << endl;
-}
-
-// Main function
+// Main Function
 int main() {
-    StackOp s;
-    s.push(Employee(101, "Alice"));
-    s.push(Employee(102, "Bob"));
-    s.push(Employee(103, "Charlie"));
-    s.push(Employee(104, "Diana"));
-    s.push(Employee(105, "Eve"));
-    s.push(Employee(106, "Frank")); // Exceeding stack size
+    StackOp stack;
 
+    // Adding employees
+    Employee emp1, emp2, emp3;
+    emp1.setId(101);
+    emp1.setName("Alice");
+    stack.push(emp1);
+
+    emp2.setId(102);
+    emp2.setName("Bob");
+    stack.push(emp2);
+
+    emp3.setId(103);
+    emp3.setName("Charlie");
+    stack.push(emp3);
+
+    // Display stack
     cout << "\nCurrent Stack:\n";
-    s.display();
+    stack.display();
 
-    s.pop(); // Remove top employee
-    s.display();
+    // Removing employees
+    stack.pop();
+    cout << "\nAfter Removing Top Employee:\n";
+    stack.display();
 
-    s.pop();
-    s.pop();
-    s.pop();
-    s.pop();
-    s.pop(); // Trying to pop from empty stack
-
-    return 0;
-}
+    stack.pop();
+    stack.pop();
+    stack
