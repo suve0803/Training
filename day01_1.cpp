@@ -506,73 +506,63 @@ int main() {
 using namespace std;
 
 // Base Class
-class Employee {
+class Vehicle {
 protected:
-    int empId;
-    string name;
+    string vehicleId;
+    string type;
+    float ratePerKm;
 
 public:
-    Employee(int id, string empName) {
-        empId = id;
-        name = empName;
+    Vehicle(string id, string vehicleType, float rate) {
+        vehicleId = id;
+        type = vehicleType;
+        ratePerKm = rate;
     }
 
-    void displayEmployeeInfo() {
-        cout << "EmpId: " << empId << "\nName: " << name << endl;
+    void displayInfo() {
+        cout << "Vehicle Type: " << type << endl;
+        cout << "Vehicle ID: " << vehicleId << endl;
+        cout << "Rate per Km: ₹" << ratePerKm << endl;
     }
 };
 
-// Derived Class 1
-class Developer : public Employee {
-protected:
-    int codingHours;
-
+// Derived Class
+class Car : public Vehicle {
 public:
-    Developer(int id, string empName, int hours) : Employee(id, empName) {
-        codingHours = hours;
+    Car(string id, float rate) : Vehicle(id, "Car", rate) {}
+
+    // Method to calculate fare for short-term rental
+    float calculateFare(float distance) {
+        return distance * ratePerKm;
     }
 
-    int calculateSalary() {
-        return codingHours * 500;  // ₹500 per coding hour
-    }
-};
-
-// Derived Class 2
-class Manager : public Employee {
-protected:
-    int teamSize;
-
-public:
-    Manager(int id, string empName, int team) : Employee(id, empName) {
-        teamSize = team;
-    }
-
-    int calculateSalary() {
-        return teamSize * 5000;  // ₹5000 per team member
-    }
-};
-
-// Derived Class from Developer and Manager
-class TechLead : public Developer, public Manager {
-public:
-    TechLead(int id, string empName, int hours, int team)
-        : Employee(id, empName), Developer(id, empName, hours), Manager(id, empName, team) {}
-
-    void displaySalaries() {
-        cout << "\nSalary based on coding: ₹" << Developer::calculateSalary() << endl;
-        cout << "Salary based on coding + team: ₹" 
-             << (Developer::calculateSalary() + Manager::calculateSalary()) << endl;
+    // Method to calculate fare for long-term rental
+    float calculateFare(float distance, int days) {
+        float fare = distance * ratePerKm;
+        if (days > 2) {
+            fare *= 0.90;  // Apply 10% discount
+        }
+        return fare;
     }
 };
 
 int main() {
-    // Input Data
-    TechLead techLead(501, "Rajesh", 120, 5);
+    // Input details
+    string vehicleId = "C100";
+    float ratePerKm = 15;
+    float distance = 100;
+    int days = 3;
 
-    // Display Information
-    cout << "Tech Lead Info:\n";
-    techLead.displayEmployeeInfo();
-    techLead.displaySalaries();
+    // Create a Car object
+    Car car(vehicleId, ratePerKm);
+
+    // Display vehicle information
+    cout << "Vehicle Details:\n";
+    car.displayInfo();
+
+    // Calculate and display fares
+    cout << "\nFare without discount: ₹" << car.calculateFare(distance) << endl;
+    cout << "Fare with long-term discount: ₹" << car.calculateFare(distance, days) << endl;
 
     return 0;
 }
