@@ -513,16 +513,14 @@ protected:
     float ratePerKm;
 
 public:
-    Vehicle(string id, string vehicleType, float rate) {
-        vehicleId = id;
-        type = vehicleType;
-        ratePerKm = rate;
+    Vehicle(string id, string type, float rate) {
+        this->vehicleId = id;
+        this->type = type;
+        this->ratePerKm = rate;
     }
 
-    void displayInfo() {
-        cout << "Vehicle Type: " << type << endl;
-        cout << "Vehicle ID: " << vehicleId << endl;
-        cout << "Rate per Km: ₹" << ratePerKm << endl;
+    void displayVehicleInfo() {
+        cout << "Vehicle Type: " << type << ", Vehicle ID: " << vehicleId << ", Rate: ₹" << ratePerKm << "/km" << endl;
     }
 };
 
@@ -531,23 +529,44 @@ class Car : public Vehicle {
 public:
     Car(string id, float rate) : Vehicle(id, "Car", rate) {}
 
-    // Method to calculate fare for short-term rental
+    // Method Overloading: Calculate fare based on distance
     float calculateFare(float distance) {
         return distance * ratePerKm;
     }
 
-    // Method to calculate fare for long-term rental
+    // Method Overloading: Calculate fare based on distance and days
     float calculateFare(float distance, int days) {
         float fare = distance * ratePerKm;
         if (days > 2) {
-            fare *= 0.90;  // Apply 10% discount
+            fare -= fare * 0.10;  // 10% discount
+        }
+        return fare;
+    }
+};
+
+// Derived Class
+class Bike : public Vehicle {
+public:
+    Bike(string id, float rate) : Vehicle(id, "Bike", rate) {}
+
+    // Method Overloading: Calculate fare based on distance
+    float calculateFare(float distance) {
+        return distance * ratePerKm;
+    }
+
+    // Method Overloading: Calculate fare based on distance and days
+    float calculateFare(float distance, int days) {
+        float fare = distance * ratePerKm;
+        if (days > 2) {
+            fare -= fare * 0.10;  // 10% discount
         }
         return fare;
     }
 };
 
 int main() {
-    // Input details
+    // Input
+    string vehicleType = "Car";
     string vehicleId = "C100";
     float ratePerKm = 15;
     float distance = 100;
@@ -556,13 +575,17 @@ int main() {
     // Create a Car object
     Car car(vehicleId, ratePerKm);
 
-    // Display vehicle information
-    cout << "Vehicle Details:\n";
-    car.displayInfo();
+    // Display Vehicle Information
+    cout << "Vehicle Information:\n";
+    car.displayVehicleInfo();
 
-    // Calculate and display fares
-    cout << "\nFare without discount: ₹" << car.calculateFare(distance) << endl;
-    cout << "Fare with long-term discount: ₹" << car.calculateFare(distance, days) << endl;
+    // Calculate Fares
+    float fareWithoutDiscount = car.calculateFare(distance);
+    float fareWithDiscount = car.calculateFare(distance, days);
+
+    // Output
+    cout << "\nFare without discount: ₹" << fareWithoutDiscount << endl;
+    cout << "Fare with long-term discount: ₹" << fareWithDiscount << endl;
 
     return 0;
 }
