@@ -442,3 +442,58 @@ int main() {
 
     return 0;
 }
+
+#include <iostream>
+#include <string>
+using namespace std;
+
+// Parent Class
+class Vehicle {
+protected:
+    string brand;
+    string model;
+    int tyres;
+    string fuelType;  // New Property
+
+public:
+    Vehicle(string b, string m, int t, string f) 
+        : brand(b), model(m), tyres(t), fuelType(f) {}
+
+    void displayInfo() const {
+        cout << "Brand: " << brand 
+             << ", Model: " << model 
+             << ", Tyres: " << tyres 
+             << ", Fuel Type: " << fuelType << endl;
+    }
+};
+
+// Child Class
+class Car : public Vehicle {
+private:
+    int doors;
+    int seatCapacity;
+    float engineCapacity;  // New Property
+    int topSpeed;          // New Property
+
+public:
+    Car(string b, string m, int t, string f, int d, int s, float e, int sp) 
+        : Vehicle(b, m, t, f), doors(d), seatCapacity(s), engineCapacity(e), topSpeed(sp) {}
+
+    void displayCarInfo() const {
+        displayInfo();
+        cout << "Doors: " << doors 
+             << ", Seat Capacity: " << seatCapacity 
+             << ", Engine Capacity: " << engineCapacity << "L"
+             << ", Top Speed: " << topSpeed << " km/h" << endl;
+    }
+};
+
+int main() {
+    // Creating an object of the Car class
+    Car myCar("Tesla", "Model S", 4, "Electric", 4, 5, 3.0, 250);
+
+    // Displaying information
+    myCar.displayCarInfo();
+
+    return 0;
+}
