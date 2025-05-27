@@ -497,3 +497,82 @@ int main() {
 
     return 0;
 }
+
+
+
+
+#include <iostream>
+#include <string>
+using namespace std;
+
+// Base Class
+class Employee {
+protected:
+    int empId;
+    string name;
+
+public:
+    Employee(int id, string empName) {
+        empId = id;
+        name = empName;
+    }
+
+    void displayEmployeeInfo() {
+        cout << "EmpId: " << empId << "\nName: " << name << endl;
+    }
+};
+
+// Derived Class 1
+class Developer : public Employee {
+protected:
+    int codingHours;
+
+public:
+    Developer(int id, string empName, int hours) : Employee(id, empName) {
+        codingHours = hours;
+    }
+
+    int calculateSalary() {
+        return codingHours * 500;  // ₹500 per coding hour
+    }
+};
+
+// Derived Class 2
+class Manager : public Employee {
+protected:
+    int teamSize;
+
+public:
+    Manager(int id, string empName, int team) : Employee(id, empName) {
+        teamSize = team;
+    }
+
+    int calculateSalary() {
+        return teamSize * 5000;  // ₹5000 per team member
+    }
+};
+
+// Derived Class from Developer and Manager
+class TechLead : public Developer, public Manager {
+public:
+    TechLead(int id, string empName, int hours, int team)
+        : Employee(id, empName), Developer(id, empName, hours), Manager(id, empName, team) {}
+
+    void displaySalaries() {
+        cout << "\nSalary based on coding: ₹" << Developer::calculateSalary() << endl;
+        cout << "Salary based on coding + team: ₹" 
+             << (Developer::calculateSalary() + Manager::calculateSalary()) << endl;
+    }
+};
+
+int main() {
+    // Input Data
+    TechLead techLead(501, "Rajesh", 120, 5);
+
+    // Display Information
+    cout << "Tech Lead Info:\n";
+    techLead.displayEmployeeInfo();
+    techLead.displaySalaries();
+
+    return 0;
+}
