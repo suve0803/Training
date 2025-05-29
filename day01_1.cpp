@@ -2,55 +2,59 @@
 #include <string>
 using namespace std;
 
-// Base class: Vehicle
-class Vehicle {
+// Abstract class: Student
+class Student {
 protected:
-    string make;
-    string model;
+    string name;
+    int id;
 
 public:
     // Constructor
-    Vehicle(string make, string model) : make(make), model(model) {}
+    Student(string studentName, int studentId) : name(studentName), id(studentId) {}
 
-    // Methods
-    void start() {
-        cout << "Starting the " << make << " " << model << endl;
-    }
-
-    void stop() {
-        cout << "Stopping the " << make << " " << model << endl;
-    }
+    // Pure virtual function
+    virtual void displayDetails() = 0; // This makes the class abstract
 };
 
-// Derived class: Car
-class Car : public Vehicle {
-private:
-    int numberOfDoors;
-
+// Derived class: UndergraduateStudent
+class UndergraduateStudent : public Student {
 public:
     // Constructor
-    Car(string make, string model, int doors) : Vehicle(make, model), numberOfDoors(doors) {}
+    UndergraduateStudent(string studentName, int studentId)
+        : Student(studentName, studentId) {}
 
-    // Method specific to Car
-    void honk() {
-        cout << "Honking the horn of the " << make << " " << model << endl;
+    // Override the pure virtual function
+    void displayDetails() override {
+        cout << "Undergraduate Student Details:" << endl;
+        cout << "Name: " << name << endl;
+        cout << "ID: " << id << endl;
     }
 };
 
-// Main class to demonstrate functionality
+// Derived class: GraduateStudent
+class GraduateStudent : public Student {
+public:
+    // Constructor
+    GraduateStudent(string studentName, int studentId)
+        : Student(studentName, studentId) {}
+
+    // Override the pure virtual function
+    void displayDetails() override {
+        cout << "Graduate Student Details:" << endl;
+        cout << "Name: " << name << endl;
+        cout << "ID: " << id << endl;
+    }
+};
+
 int main() {
-    // Creating a generic vehicle
-    Vehicle genericVehicle("Generic", "Vehicle");
-    genericVehicle.start();
-    genericVehicle.stop();
+    // Create objects of derived classes
+    UndergraduateStudent undergrad("Alice", 101);
+    GraduateStudent grad("Bob", 202);
 
+    // Display details
+    undergrad.displayDetails();
     cout << endl;
-
-    // Creating a specific car
-    Car car("Toyota", "Camry", 4);
-    car.start();
-    car.honk();
-    car.stop();
+    grad.displayDetails();
 
     return 0;
 }
