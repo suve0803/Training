@@ -1,26 +1,130 @@
-#include <iostream>
+    #include <iostream>
 #include <fstream>
-#include <string>
 #include <vector>
+#include <string>
 using namespace std;
 
-struct Employee {
+class Employee {
+private:
     int id;
     string name;
     float salary;
 
-    // Function to display employee details
-    void display() {
+public:
+    Employee() : id(0), salary(0.0) {}
+
+    // Input employee details
+    void inputDetails() {
+        cout << "Enter Employee ID: ";
+        cin >> id;
+        cin.ignore();
+        cout << "Enter Employee Name: ";
+        getline(cin, name);
+        cout << "Enter Employee Salary: ";
+        cin >> salary;
+    }
+
+    // Display employee details
+    void displayDetails() const {
         cout << "ID: " << id << ", Name: " << name << ", Salary: " << salary << endl;
+    }
+
+    // Get ID for comparison
+    int getID() const { return id; }
+
+    // Update employee details
+    void updateDetails() {
+        cout << "Enter new name: ";
+        cin.ignore();
+        getline(cin, name);
+        cout << "Enter new salary: ";
+        cin >> salary;
+    }
+
+    // Write employee data to a file
+    void writeToFile(ofstream &outFile) const {
+        outFile << id << " " << name << " " << salary << endl;
+    }
+
+    // Read employee data from a file
+    void readFromFile(ifstream &inFile) {
+        inFile >> id >> name >> salary;
     }
 };
 
-void addEmployee(const string &filename);
-void viewEmployees(const string &filename);
-void updateEmployee(const string &filename);
+class EmployeeManager {
+private:
+    vector<Employee> employees;
+    string filename;
+
+    void loadFromFile() {
+        employees.clear();
+        ifstream file(filename);
+        if (file.is_open()) {
+            Employee emp;
+            while (!file.eof()) {
+                emp.readFromFile(file);
+                if (file) { // Avoid adding an incomplete or extra object
+                    employees.push_back(emp);
+                }
+            }
+            file.close();
+        }
+    }
+
+    void saveToFile() const {
+        ofstream file(filename);
+        if (file.is_open()) {
+            for (const auto &emp : employees) {
+                emp.writeToFile(file);
+            }
+            file.close();
+        }
+    }
+
+public:
+    EmployeeManager(const string &file) : filename(file) {}
+
+    void addEmployee() {
+        Employee emp;
+        emp.inputDetails();
+        employees.push_back(emp);
+        saveToFile();
+        cout << "Employee added successfully.\n";
+    }
+
+    void viewEmployees() const {
+        if (employees.empty()) {
+            cout << "No employees to display.\n";
+            return;
+        }
+        cout << "\nEmployee Details:\n";
+        for (const auto &emp : employees) {
+            emp.displayDetails();
+        }
+    }
+
+    void updateEmployee() {
+        int id;
+        cout << "Enter Employee ID to update: ";
+        cin >> id;
+
+        for (auto &emp : employees) {
+            if (emp.getID() == id) {
+                cout << "Updating Employee Details:\n";
+                emp.updateDetails();
+                saveToFile();
+                cout << "Employee updated successfully.\n";
+                return;
+            }
+        }
+
+        cout << "Employee with ID " << id << " not found.\n";
+    }
+};
 
 int main() {
-    string filename = "employees.txt";
+    EmployeeManager manager("employees.txt");
     int choice;
 
     do {
@@ -33,113 +137,22 @@ int main() {
         cin >> choice;
 
         switch (choice) {
-            case 1:
-                addEmployee(filename);
-                break;
-            case 2:
-                viewEmployees(filename);
-                break;
-            case 3:
-                updateEmployee(filename);
-                break;
-            case 4:
-                cout << "Exiting the program.\n";
-                break;
-            default:
-                cout << "Invalid choice. Please try again.\n";
+        case 1:
+            manager.addEmployee();
+            break;
+        case 2:
+            manager.viewEmployees();
+            break;
+        case 3:
+            manager.updateEmployee();
+            break;
+        case 4:
+            cout << "Exiting the program.\n";
+            break;
+        default:
+            cout << "Invalid choice. Please try again.\n";
         }
     } while (choice != 4);
 
     return 0;
-}
-
-void addEmployee(const string &filename) {
-    ofstream file(filename, ios::app); // Open file in append mode
-    if (!file) {
-        cerr << "Error opening file for writing.\n";
-        return;
-    }
-
-    Employee emp;
-    cout << "Enter Employee ID: ";
-    cin >> emp.id;
-    cin.ignore();
-    cout << "Enter Employee Name: ";
-    getline(cin, emp.name);
-    cout << "Enter Employee Salary: ";
-    cin >> emp.salary;
-
-    // Write employee details to file
-    file << emp.id << " " << emp.name << " " << emp.salary << endl;
-
-    file.close();
-    cout << "Employee added successfully.\n";
-}
-
-void viewEmployees(const string &filename) {
-    ifstream file(filename); // Open file in read mode
-    if (!file) {
-        cerr << "Error opening file for reading.\n";
-        return;
-    }
-
-    Employee emp;
-    cout << "\nEmployee Details:\n";
-    while (file >> emp.id >> emp.name >> emp.salary) {
-        emp.display();
-    }
-
-    file.close();
-}
-
-void updateEmployee(const string &filename) {
-    ifstream file(filename); // Open file in read mode
-    if (!file) {
-        cerr << "Error opening file for reading.\n";
-        return;
-    }
-
-    vector<Employee> employees; // Store all employees in memory
-    Employee emp;
-
-    while (file >> emp.id >> emp.name >> emp.salary) {
-        employees.push_back(emp);
-    }
-    file.close();
-
-    int updateId;
-    cout << "Enter Employee ID to update: ";
-    cin >> updateId;
-
-    bool found = false;
-    for (auto &e : employees) {
-        if (e.id == updateId) {
-            found = true;
-            cout << "Enter new name: ";
-            cin.ignore();
-            getline(cin, e.name);
-            cout << "Enter new salary: ";
-            cin >> e.salary;
-            cout << "Employee details updated successfully.\n";
-            break;
-        }
-    }
-
-    if (!found) {
-        cout << "Employee with ID " << updateId << " not found.\n";
-        return;
-    }
-
-    // Write updated data back to file
-    ofstream outFile(filename); // Open file in overwrite mode
-    if (!outFile) {
-        cerr << "Error opening file for writing.\n";
-        return;
-    }
-
-    for (const auto &e : employees) {
-        outFile << e.id << " " << e.name << " " << e.salary << endl;
-    }
-
-    outFile.close();
 }
