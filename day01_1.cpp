@@ -141,7 +141,6 @@ int main() {
 #include <thread>
 #include <chrono>
 #include <algorithm>
-#include <stdexcept>
 
 // Enum for log levels
 enum LogLevel { INFO, DEBUG, WARNING, ERROR };
@@ -150,27 +149,22 @@ enum LogLevel { INFO, DEBUG, WARNING, ERROR };
 class Logger {
 public:
     void log(LogLevel level, const std::string& message) {
-        std::ofstream logFile;
-        try {
-            logFile.open("job_log.txt", std::ios::app);
-            if (!logFile.is_open()) {
-                throw std::runtime_error("Unable to open log file.");
-            }
-
-            std::string levelStr;
-            switch (level) {
-                case INFO: levelStr = "[INFO]"; break;
-                case DEBUG: levelStr = "[DEBUG]"; break;
-                case WARNING: levelStr = "[WARNING]"; break;
-                case ERROR: levelStr = "[ERROR]"; break;
-            }
-
-            logFile << levelStr << " " << message << std::endl;
-        } catch (const std::exception& e) {
-            std::cerr << "[ERROR] Logger exception: " << e.what() << std::endl;
-        } finally {
-            if (logFile.is_open()) logFile.close();
+        std::ofstream logFile("job_log.txt", std::ios::app);
+        if (!logFile.is_open()) {
+            std::cerr << "[ERROR] Unable to open log file.\n";
+            return;
         }
+
+        std::string levelStr;
+        switch (level) {
+            case INFO: levelStr = "[INFO]"; break;
+            case DEBUG: levelStr = "[DEBUG]"; break;
+            case WARNING: levelStr = "[WARNING]"; break;
+            case ERROR: levelStr = "[ERROR]"; break;
+        }
+
+        logFile << levelStr << " " << message << std::endl;
+        logFile.close();
     }
 };
 
@@ -199,14 +193,15 @@ public:
             return;
         }
 
-        try {
-            int id, execTime, prio;
-            while (file >> id >> execTime >> prio) {
-                jobs.emplace_back(id, execTime, prio);
-            }
+        int id, execTime, prio;
+        while (file >> id >> execTime >> prio) {
+            jobs.emplace_back(id, execTime, prio);
+        }
+
+        if (jobs.empty()) {
+            logger.log(WARNING, "No jobs loaded. File might be empty.");
+        } else {
             logger.log(INFO, "Successfully loaded " + std::to_string(jobs.size()) + " jobs.");
-        } catch (const std::exception& e) {
-            logger.log(ERROR, "Error while reading jobs: " + std::string(e.what()));
         }
 
         file.close();
@@ -223,15 +218,11 @@ public:
         int totalTime = 0;
 
         for (const auto& job : jobs) {
-            try {
-                logger.log(DEBUG, "Executing Job ID: " + std::to_string(job.jobID) +
-                                  " | Priority: " + std::to_string(job.priority));
-                std::this_thread::sleep_for(std::chrono::milliseconds(job.executionTime));
-                totalTime += job.executionTime;
-            } catch (const std::exception& e) {
-                logger.log(ERROR, "Error during job execution: " + std::string(e.what()));
-                std::cerr << "[ERROR] Error during job execution: " << e.what() << std::endl;
-            }
+            logger.log(DEBUG, "Executing Job ID: " + std::to_string(job.jobID) +
+                              " | Priority: " + std::to_string(job.priority));
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(job.executionTime));
+            totalTime += job.executionTime;
         }
 
         logger.log(INFO, "All jobs executed in " + std::to_string(totalTime) + "ms.");
@@ -308,4 +299,6 @@ int main() {
                 std::cerr << "[ERROR] Invalid menu choice. Please try again.\n";
         }
     }
+
+    return 0;
 }
