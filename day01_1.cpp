@@ -130,3 +130,182 @@ int main() {
 
     return 0;
 }
+
+
+
+
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <string>
+#include <thread>
+#include <chrono>
+#include <algorithm>
+#include <stdexcept>
+
+// Enum for log levels
+enum LogLevel { INFO, DEBUG, WARNING, ERROR };
+
+// Logger class to handle logging messages
+class Logger {
+public:
+    void log(LogLevel level, const std::string& message) {
+        std::ofstream logFile;
+        try {
+            logFile.open("job_log.txt", std::ios::app);
+            if (!logFile.is_open()) {
+                throw std::runtime_error("Unable to open log file.");
+            }
+
+            std::string levelStr;
+            switch (level) {
+                case INFO: levelStr = "[INFO]"; break;
+                case DEBUG: levelStr = "[DEBUG]"; break;
+                case WARNING: levelStr = "[WARNING]"; break;
+                case ERROR: levelStr = "[ERROR]"; break;
+            }
+
+            logFile << levelStr << " " << message << std::endl;
+        } catch (const std::exception& e) {
+            std::cerr << "[ERROR] Logger exception: " << e.what() << std::endl;
+        } finally {
+            if (logFile.is_open()) logFile.close();
+        }
+    }
+};
+
+// Class to represent a single job
+class Job {
+public:
+    int jobID;
+    int executionTime;
+    int priority;
+
+    Job(int id, int execTime, int prio) : jobID(id), executionTime(execTime), priority(prio) {}
+};
+
+// Class to manage job scheduling
+class JobScheduler {
+private:
+    std::vector<Job> jobs;
+    Logger logger;
+
+public:
+    void loadJobs(const std::string& filename) {
+        std::ifstream file(filename);
+
+        if (!file.is_open()) {
+            logger.log(ERROR, "File could not be opened.");
+            return;
+        }
+
+        try {
+            int id, execTime, prio;
+            while (file >> id >> execTime >> prio) {
+                jobs.emplace_back(id, execTime, prio);
+            }
+            logger.log(INFO, "Successfully loaded " + std::to_string(jobs.size()) + " jobs.");
+        } catch (const std::exception& e) {
+            logger.log(ERROR, "Error while reading jobs: " + std::string(e.what()));
+        }
+
+        file.close();
+    }
+
+    void executeJobs(bool (*compare)(const Job&, const Job&)) {
+        if (jobs.empty()) {
+            logger.log(WARNING, "No jobs to execute.");
+            std::cerr << "[WARNING] No jobs to execute.\n";
+            return;
+        }
+
+        std::sort(jobs.begin(), jobs.end(), compare);
+        int totalTime = 0;
+
+        for (const auto& job : jobs) {
+            try {
+                logger.log(DEBUG, "Executing Job ID: " + std::to_string(job.jobID) +
+                                  " | Priority: " + std::to_string(job.priority));
+                std::this_thread::sleep_for(std::chrono::milliseconds(job.executionTime));
+                totalTime += job.executionTime;
+            } catch (const std::exception& e) {
+                logger.log(ERROR, "Error during job execution: " + std::string(e.what()));
+                std::cerr << "[ERROR] Error during job execution: " << e.what() << std::endl;
+            }
+        }
+
+        logger.log(INFO, "All jobs executed in " + std::to_string(totalTime) + "ms.");
+    }
+
+    void exportLog() {
+        logger.log(INFO, "Log saved to job_log.txt.");
+    }
+
+    static bool fifoCompare(const Job& a, const Job& b) {
+        return a.jobID < b.jobID;
+    }
+
+    static bool priorityCompare(const Job& a, const Job& b) {
+        return a.priority > b.priority;
+    }
+};
+
+int main() {
+    JobScheduler scheduler;
+    int choice;
+
+    while (true) {
+        std::cout << "==== JobChain Scheduler ====\n";
+        std::cout << "1. Load jobs from file\n";
+        std::cout << "2. Choose scheduling algorithm\n";
+        std::cout << "3. Execute jobs\n";
+        std::cout << "4. Export log\n";
+        std::cout << "5. Exit\n";
+        std::cout << "> ";
+
+        if (!(std::cin >> choice)) {
+            std::cerr << "[ERROR] Invalid input. Please enter a valid number.\n";
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            continue;
+        }
+
+        switch (choice) {
+            case 1:
+                scheduler.loadJobs("jobs.txt");
+                break;
+
+            case 2: {
+                char algoChoice;
+                std::cout << "Choose scheduling algorithm:\n";
+                std::cout << "a. FIFO (Job ID)\n";
+                std::cout << "b. Priority-based\n";
+                std::cout << "> ";
+                std::cin >> algoChoice;
+
+                if (algoChoice == 'a') {
+                    scheduler.executeJobs(JobScheduler::fifoCompare);
+                } else if (algoChoice == 'b') {
+                    scheduler.executeJobs(JobScheduler::priorityCompare);
+                } else {
+                    std::cerr << "[ERROR] Invalid algorithm choice.\n";
+                }
+                break;
+            }
+
+            case 3:
+                scheduler.executeJobs(JobScheduler::fifoCompare);  // Default execution mode
+                break;
+
+            case 4:
+                scheduler.exportLog();
+                break;
+
+            case 5:
+                return 0;
+
+            default:
+                std::cerr << "[ERROR] Invalid menu choice. Please try again.\n";
+        }
+    }
+}
