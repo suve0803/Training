@@ -1,3 +1,62 @@
+class Logger
+{
+    ofstream outFile;
+public:
+    Logger(const char* f1)
+    {
+        try
+        {
+            outFile.open(f1, ios::out);
+            if (!outFile.is_open())
+            {
+                throw "File already opened";
+            }
+        }
+        catch (const char* s)
+        {
+            cout << s << endl;
+            exit(0);
+        }
+    }
+
+    const char* logleveltostring(int level)
+    {
+        switch (level)
+        {
+        default:
+            break;
+        case 0:
+            return "INFO";
+            break;
+        case 1:
+            return "DEBUG";
+            break;
+        case 2:
+            return "WARNING";
+            break;
+        case 3:
+            return "ERROR";
+            break;
+        }
+        return "";
+    }
+
+    void log(int level, const char* str)
+    {
+        outFile << "[" << logleveltostring(level) << "] " << str << std::endl; // std::endl flushes automatically
+    }
+
+    ~Logger()
+    {
+        if (outFile.is_open())
+        {
+            outFile.close(); // Ensures the buffer is flushed and the file is closed properly
+        }
+    }
+};
+
+
+
 #include <iostream>
 #include <fstream>
 #include <vector>
