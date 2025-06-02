@@ -1,304 +1,178 @@
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <string>
-#include <thread>
-#include <chrono>
-#include <algorithm>
+#include<iostream>
+#include<string>
+#include<fstream>
+#include<vector>
+#include<chrono>
+#include<algorithm>
+#include<thread>
+#include<sstream>
+using namespace std;
 
-enum LogLevel { INFO, DEBUG, WARNING, ERROR };
+enum logLevel {
+    INFO = 0,
+    DEBUG,
+    WARNING,
+    ERROR,
+};
 
 class Logger {
+    ofstream fileOut;
 public:
-    void log(LogLevel level, const std::string& message) {
-        std::ofstream logFile("job_log.txt", std::ios::app);
-        if (logFile.is_open()) {
-            std::string levelStr;
-            switch (level) {
-                case INFO: levelStr = "[INFO]"; break;
-                case DEBUG: levelStr = "[DEBUG]"; break;
-                case WARNING: levelStr = "[WARNING]"; break;
-                case ERROR: levelStr = "[ERROR]"; break;
+    Logger(char* f1) {
+        try {
+            fileOut.open(f1, ios::app);
+            if (!fileOut.is_open()) {
+                throw "Error in opening file";
             }
-            logFile << levelStr << " " << message << std::endl;
-            logFile.close();
         }
-    }
-};
-
-class Job {
-public:
-    int jobID;
-    int executionTime;
-    int priority;
-
-    Job(int id, int execTime, int prio) : jobID(id), executionTime(execTime), priority(prio) {}
-};
-
-class JobScheduler {
-private:
-    std::vector<Job> jobs;
-    Logger logger;
-
-public:
-    void loadJobs(const std::string& filename) {
-        std::ifstream file(filename);
-        if (!file.is_open()) {
-            logger.log(ERROR, "File could not be opened.");
-            return;
-        }
-
-        int id, execTime, prio;
-        while (file >> id >> execTime >> prio) {
-            jobs.emplace_back(id, execTime, prio);
-        }
-        logger.log(INFO, "Successfully loaded " + std::to_string(jobs.size()) + " jobs.");
-        file.close();
-    }
-
-    void executeJobs(bool (*compare)(const Job&, const Job&)) {
-        std::sort(jobs.begin(), jobs.end(), compare);
-        int totalTime = 0;
-
-        for (const auto& job : jobs) {
-            logger.log(DEBUG, "Executing Job ID: " + std::to_string(job.jobID) + " | Priority: " + std::to_string(job.priority));
-            std::this_thread::sleep_for(std::chrono::milliseconds(job.executionTime));
-            totalTime += job.executionTime;
-        }
-
-        logger.log(INFO, "All jobs executed in " + std::to_string(totalTime) + "ms.");
-    }
-
-    void exportLog() {
-        logger.log(INFO, "Log saved to job_log.txt.");
-    }
-
-    static bool fifoCompare(const Job& a, const Job& b) {
-        return a.jobID < b.jobID;
-    }
-
-    static bool priorityCompare(const Job& a, const Job& b) {
-        return a.priority > b.priority; // Higher priority first
-    }
-};
-
-int main() {
-    JobScheduler scheduler;
-    int choice;
-
-    while (true) {
-        std::cout << "==== JobChain Scheduler ====\n";
-        std::cout << "1. Load jobs from file\n";
-        std::cout << "2. Choose scheduling algorithm\n";
-        std::cout << "3. Execute jobs\n";
-        std::cout << "4. Export log\n";
-        std::cout << "5. Exit\n";
-        std::cout << "> ";
-        std::cin >> choice;
-
-        switch (choice) {
-            case 1:
-                scheduler.loadJobs("jobs.txt");
-                break;
-            case 2: {
-                char algoChoice;
-                std::cout << "Choose scheduling algorithm:\n";
-                std::cout << "a. FIFO (Job ID)\n";
-                std::cout << "b. Priority-based\n";
-                std::cout << "> ";
-                std::cin >> algoChoice;
-
-                if (algoChoice == 'a') {
-                    scheduler.executeJobs(JobScheduler::fifoCompare);
-                } else if (algoChoice == 'b') {
-                    scheduler.executeJobs(JobScheduler::priorityCompare);
-                }
-                break;
-            }
-            case 3:
-                std::cout << "Please choose a scheduling algorithm first.\n";
-                break;
-            case 4:
-                scheduler.exportLog();
-                break;
-            case 5:
-                return 0;
-            default:
-                std::cout << "Invalid choice. Please try again.\n";
+        catch (string s) {
+            cout << s;
+            exit(0);
         }
     }
 
-    return 0;
-}
-
-
-
-
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <string>
-#include <thread>
-#include <chrono>
-#include <algorithm>
-
-// Enum for log levels
-enum LogLevel { INFO, DEBUG, WARNING, ERROR };
-
-// Logger class to handle logging messages
-class Logger {
-public:
-    void log(LogLevel level, const std::string& message) {
-        std::ofstream logFile("job_log.txt", std::ios::app);
-        if (!logFile.is_open()) {
-            std::cerr << "[ERROR] Unable to open log file.\n";
-            return;
-        }
-
-        std::string levelStr;
+    const char* logleveltostring(int level) {
         switch (level) {
-            case INFO: levelStr = "[INFO]"; break;
-            case DEBUG: levelStr = "[DEBUG]"; break;
-            case WARNING: levelStr = "[WARNING]"; break;
-            case ERROR: levelStr = "[ERROR]"; break;
+        case INFO:
+            return "INFO";
+        case DEBUG:
+            return "DEBUG";
+        case WARNING:
+            return "WARNING";
+        case ERROR:
+            return "ERROR";
+        default:
+            return "UNKNOWN";
         }
+    }
 
-        logFile << levelStr << " " << message << std::endl;
-        logFile.close();
+    void log(int level, const string& str) {
+        fileOut << "[" << logleveltostring(level) << "] " << str << endl;
     }
 };
 
-// Class to represent a single job
 class Job {
-public:
-    int jobID;
+protected:
+    int JobID;
     int executionTime;
     int priority;
 
-    Job(int id, int execTime, int prio) : jobID(id), executionTime(execTime), priority(prio) {}
+public:
+    void setId(int JobID) {
+        this->JobID = JobID;
+    }
+
+    int getId() {
+        return JobID;
+    }
+
+    void setExecTime(int executionTime) {
+        this->executionTime = executionTime;
+    }
+
+    int getExecTime() {
+        return executionTime;
+    }
+
+    void setPriority(int priority) {
+        this->priority = priority;
+    }
+
+    int getPriority() {
+        return priority;
+    }
+
+    void display() {
+        cout << "Job ID: " << JobID << endl;
+        cout << "Execution Time: " << executionTime << endl;
+        cout << "Priority: " << priority << endl;
+    }
+
+    int executeJob(Logger& obj) {
+        auto start = chrono::system_clock::now();
+        this_thread::sleep_for(chrono::milliseconds(executionTime));
+        auto end = chrono::system_clock::now();
+        auto duration = chrono::duration_cast<chrono::milliseconds>(end - start);
+
+        // Using std::ostringstream for string formatting
+        ostringstream msg;
+        msg << "Executing Job ID: " << JobID 
+            << " | Priority: " << priority 
+            << " | ExecTime: " << duration.count() << "ms";
+        
+        obj.log(DEBUG, msg.str());
+        return duration.count();
+    }
 };
 
-// Class to manage job scheduling
-class JobScheduler {
-private:
-    std::vector<Job> jobs;
-    Logger logger;
+class Queue {
+protected:
+    vector<Job> arr;
+    int totalTime;
+    bool isPriority;
 
 public:
-    void loadJobs(const std::string& filename) {
-        std::ifstream file(filename);
-
-        if (!file.is_open()) {
-            logger.log(ERROR, "File could not be opened.");
-            return;
+    Queue() {
+        Job j;
+        totalTime = 0;
+        int val;
+        isPriority = false;
+        ifstream inFile;
+        try {
+            inFile.open("job.txt", ios::in);
+            if (!inFile.is_open()) {
+                throw "File cannot be opened";
+            }
+        }
+        catch (const char* s) {
+            cout << s << endl;
+            exit(0);
         }
 
-        int id, execTime, prio;
-        while (file >> id >> execTime >> prio) {
-            jobs.emplace_back(id, execTime, prio);
+        while (!inFile.eof()) {
+            inFile >> val;
+            j.setId(val);
+            inFile >> val;
+            j.setExecTime(val);
+            inFile >> val;
+            j.setPriority(val);
+            arr.push_back(j);
         }
-
-        if (jobs.empty()) {
-            logger.log(WARNING, "No jobs loaded. File might be empty.");
-        } else {
-            logger.log(INFO, "Successfully loaded " + std::to_string(jobs.size()) + " jobs.");
-        }
-
-        file.close();
     }
 
-    void executeJobs(bool (*compare)(const Job&, const Job&)) {
-        if (jobs.empty()) {
-            logger.log(WARNING, "No jobs to execute.");
-            std::cerr << "[WARNING] No jobs to execute.\n";
-            return;
+    static bool compareJobs(const Job& obj1, const Job& obj2) {
+        return obj1.getPriority() < obj2.getPriority();
+    }
+
+    void sortPriority() {
+        sort(arr.begin(), arr.end(), compareJobs);
+    }
+
+    void executeQueue(Logger& obj) {
+        if (isPriority) {
+            sortPriority();
         }
 
-        std::sort(jobs.begin(), jobs.end(), compare);
-        int totalTime = 0;
-
-        for (const auto& job : jobs) {
-            logger.log(DEBUG, "Executing Job ID: " + std::to_string(job.jobID) +
-                              " | Priority: " + std::to_string(job.priority));
-
-            std::this_thread::sleep_for(std::chrono::milliseconds(job.executionTime));
-            totalTime += job.executionTime;
+        for (auto& i : arr) {
+            totalTime += i.executeJob(obj);
         }
-
-        logger.log(INFO, "All jobs executed in " + std::to_string(totalTime) + "ms.");
     }
 
-    void exportLog() {
-        logger.log(INFO, "Log saved to job_log.txt.");
+    int getTotTime() {
+        return totalTime;
     }
 
-    static bool fifoCompare(const Job& a, const Job& b) {
-        return a.jobID < b.jobID;
-    }
-
-    static bool priorityCompare(const Job& a, const Job& b) {
-        return a.priority > b.priority;
+    void setPriority(bool isPriority) {
+        this->isPriority = isPriority;
     }
 };
 
 int main() {
-    JobScheduler scheduler;
-    int choice;
+    Logger logger((char*)"log.txt");
+    Queue queue;
 
-    while (true) {
-        std::cout << "==== JobChain Scheduler ====\n";
-        std::cout << "1. Load jobs from file\n";
-        std::cout << "2. Choose scheduling algorithm\n";
-        std::cout << "3. Execute jobs\n";
-        std::cout << "4. Export log\n";
-        std::cout << "5. Exit\n";
-        std::cout << "> ";
+    queue.setPriority(true); // Set true to enable priority-based execution.
+    queue.executeQueue(logger);
 
-        if (!(std::cin >> choice)) {
-            std::cerr << "[ERROR] Invalid input. Please enter a valid number.\n";
-            std::cin.clear();
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-            continue;
-        }
-
-        switch (choice) {
-            case 1:
-                scheduler.loadJobs("jobs.txt");
-                break;
-
-            case 2: {
-                char algoChoice;
-                std::cout << "Choose scheduling algorithm:\n";
-                std::cout << "a. FIFO (Job ID)\n";
-                std::cout << "b. Priority-based\n";
-                std::cout << "> ";
-                std::cin >> algoChoice;
-
-                if (algoChoice == 'a') {
-                    scheduler.executeJobs(JobScheduler::fifoCompare);
-                } else if (algoChoice == 'b') {
-                    scheduler.executeJobs(JobScheduler::priorityCompare);
-                } else {
-                    std::cerr << "[ERROR] Invalid algorithm choice.\n";
-                }
-                break;
-            }
-
-            case 3:
-                scheduler.executeJobs(JobScheduler::fifoCompare);  // Default execution mode
-                break;
-
-            case 4:
-                scheduler.exportLog();
-                break;
-
-            case 5:
-                return 0;
-
-            default:
-                std::cerr << "[ERROR] Invalid menu choice. Please try again.\n";
-        }
-    }
-
+    cout << "Total execution time: " << queue.getTotTime() << "ms" << endl;
     return 0;
-}
