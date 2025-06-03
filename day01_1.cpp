@@ -1,4 +1,63 @@
 #include <iostream>
+
+template <typename T, std::size_t Size>
+class MyArray {
+private:
+    T data[Size]; // Fixed-size array to store elements
+
+public:
+    // Constructor to initialize elements with a default value
+    MyArray() {
+        for (std::size_t i = 0; i < Size; ++i) {
+            data[i] = T(); // Default initialization for type T
+        }
+    }
+
+    // Access elements using an index
+    T& operator[](std::size_t index) {
+        return data[index];
+    }
+
+    const T& operator[](std::size_t index) const {
+        return data[index];
+    }
+
+    // Get the size of the array
+    std::size_t size() const {
+        return Size;
+    }
+
+    // Fill the array with a specific value
+    void fill(const T& value) {
+        for (std::size_t i = 0; i < Size; ++i) {
+            data[i] = value;
+        }
+    }
+
+    // Print the array in the format: MyArray<datatype, size> {elements}
+    void print(const std::string& name = "Array") const {
+        std::cout << "MyArray<" << typeid(T).name() << ", " << Size << "> " << name << " { ";
+        for (std::size_t i = 0; i < Size; ++i) {
+            std::cout << data[i];
+            if (i < Size - 1) std::cout << ", ";
+        }
+        std::cout << " };" << std::endl;
+    }
+};
+
+// Example usage
+int main() {
+    MyArray<int, 5> myArray; // Create an array of size 5
+    myArray.fill(10);        // Fill it with the value 10
+    myArray[2] = 20;         // Modify the third element
+
+    // Print the array
+    myArray.print("MyArray");
+    return 0;
+}
+
+
+#include <iostream>
 #include <stdexcept>
 
 template <typename T, std::size_t Size>
