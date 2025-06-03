@@ -1,4 +1,87 @@
-class Logger
+#include <iostream>
+#include <stdexcept>
+
+template <typename T, std::size_t Size>
+class StaticArray {
+private:
+    T data[Size]; // Internal storage
+
+public:
+    // Type definitions
+    using value_type = T;
+    using size_type = std::size_t;
+    using reference = T&;
+    using const_reference = const T&;
+    using iterator = T*;
+    using const_iterator = const T*;
+
+    // Element access
+    reference operator[](size_type index) {
+        return data[index];
+    }
+
+    const_reference operator[](size_type index) const {
+        return data[index];
+    }
+
+    reference at(size_type index) {
+        if (index >= Size) {
+            throw std::out_of_range("Index out of range");
+        }
+        return data[index];
+    }
+
+    const_reference at(size_type index) const {
+        if (index >= Size) {
+            throw std::out_of_range("Index out of range");
+        }
+        return data[index];
+    }
+
+    reference front() {
+        return data[0];
+    }
+
+    const_reference front() const {
+        return data[0];
+    }
+
+    reference back() {
+        return data[Size - 1];
+    }
+
+    const_reference back() const {
+        return data[Size - 1];
+    }
+
+    // Iterators
+    iterator begin() {
+        return data;
+    }
+
+    const_iterator begin() const {
+        return data;
+    }
+
+    const_iterator cbegin() const {
+        return data;
+    }
+
+    iterator end() {
+        return data + Size;
+    }
+
+    const_iterator end() const {
+        return data + Size;
+    }
+
+    const
+
+
+c
+las
+s
+ Logger
 {
     ofstream outFile;
 public:
