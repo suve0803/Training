@@ -1,5 +1,107 @@
 #include <iostream>
 #include <vector>
+#include <string>
+#include <algorithm>
+#include <cmath>
+
+using namespace std;
+
+int godNumber(const string& s) {
+    // Frequency array for digits 0-9
+    vector<int> frequency(10, 0);
+
+    // Count frequency of each digit
+    for (char ch : s) {
+        frequency[ch - '0']++;
+    }
+
+    // Calculate definite values
+    vector<int> definiteValues;
+    for (int digit = 0; digit <= 9; digit++) {
+        if (frequency[digit] > 0) {
+            definiteValues.push_back(digit * frequency[digit]);
+        }
+    }
+
+    // If only one type of character present, return that definite value
+    if (definiteValues.size() == 1) {
+        return definiteValues[0];
+    }
+
+    // Find maximum and minimum definite values
+    int maxVal = *max_element(definiteValues.begin(), definiteValues.end());
+    int minVal = *min_element(definiteValues.begin(), definiteValues.end());
+
+    // Return the difference - God Number
+    return abs(maxVal - minVal);
+}
+
+int main() {
+    string s;
+    cin >> s;
+    cout << godNumber(s) << endl;
+    return 0;
+}
+
+
+
+#include <iostream>
+#include <string>
+#include <algorithm>
+#include <limits>
+#include <vector>
+
+using namespace std;
+
+template<typename Container>
+int godNumber(const Container& s) {
+    int frequency[10] = {0};
+    for (auto ch : s) {
+        if (ch >= '0' && ch <= '9') {
+            frequency[ch - '0']++;
+        }
+        else {
+            // Ignore or handle invalid chars if needed
+        }
+    }
+
+    int maxDefiniteValue = numeric_limits<int>::min();
+    int minDefiniteValue = numeric_limits<int>::max();
+
+    for (int digit = 0; digit <= 9; digit++) {
+        if (frequency[digit] > 0) {
+            int definiteValue = digit * frequency[digit];
+            maxDefiniteValue = max(maxDefiniteValue, definiteValue);
+            minDefiniteValue = min(minDefiniteValue, definiteValue);
+        }
+    }
+
+    // If only one digit type, return its definite value
+    if (maxDefiniteValue == minDefiniteValue) {
+        return maxDefiniteValue;
+    }
+
+    return maxDefiniteValue - minDefiniteValue;
+}
+
+int main() {
+    string s;
+    cin >> s;
+
+    cout << godNumber(s) << endl;
+
+    // Example usage with vector<char>
+    vector<char> chars(s.begin(), s.end());
+    cout << "God Number from vector<char>: " << godNumber(chars) << endl;
+
+    return 0;
+}
+
+
+
+
+#include <iostream>
+#include <vector>
 #include <algorithm> // For sort
 
 int main() {
