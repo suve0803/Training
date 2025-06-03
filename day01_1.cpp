@@ -1,5 +1,57 @@
 #include <iostream>
 
+// Function to calibrate sensor readings
+void calibrateSensor(float readings[], size_t size, float calibration_factor) {
+    for (size_t i = 0; i < size; ++i) {
+        readings[i] += calibration_factor; // Apply the calibration factor
+    }
+}
+
+// Function to calculate the average of sensor readings
+float calculateAverage(const float readings[], size_t size) {
+    float sum = 0.0f;
+    for (size_t i = 0; i < size; ++i) {
+        sum += readings[i]; // Accumulate the readings
+    }
+    return sum / size; // Return the average
+}
+
+// Function to process all sensors: calibrate and compute averages
+void processSensors(
+    float sensor_readings[][5], 
+    size_t num_sensors, 
+    size_t readings_per_sensor, 
+    const float calibration_factors[]
+) {
+    for (size_t i = 0; i < num_sensors; ++i) {
+        calibrateSensor(sensor_readings[i], readings_per_sensor, calibration_factors[i]); // Calibrate readings
+        float average = calculateAverage(sensor_readings[i], readings_per_sensor);       // Calculate average
+        std::cout << "Sensor " << (i + 1) 
+                  << " Average (calibrated): " << average << std::endl;
+    }
+}
+
+int main() {
+    // Step 1: Define sensor readings as a 2D C-style array
+    float sensor_readings[3][5] = {
+        {20.0, 21.0, 22.0, 20.5, 19.8}, // Sensor 1 readings
+        {30.0, 30.2, 29.8, 30.1, 30.3}, // Sensor 2 readings
+        {25.0, 26.0, 24.0, 25.5, 26.2}  // Sensor 3 readings
+    };
+
+    // Step 2: Define calibration factors as a 1D C-style array
+    float calibration_factors[3] = {0.5, -0.3, 1.2};
+
+    // Step 3: Process sensors
+    processSensors(sensor_readings, 3, 5, calibration_factors);
+
+    return 0;
+}
+
+
+
+#include <iostream>
+
 // Define constants for the number of sensors and readings
 const size_t NUM_SENSORS = 3;
 const size_t NUM_READINGS = 5;
