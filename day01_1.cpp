@@ -1,4 +1,40 @@
 #include <iostream>
+#include <array> // Include array for fixed-size collections
+
+int main() {
+    // Step 1: Store readings from 3 sensors, each with 5 values
+    std::array<std::array<float, 5>, 3> sensor_readings = {{
+        {23.4, 22.7, 24.1, 23.9, 22.6}, // Readings for Sensor 1
+        {19.8, 20.1, 19.6, 20.0, 19.7}, // Readings for Sensor 2
+        {25.3, 25.6, 25.1, 26.0, 25.8}  // Readings for Sensor 3
+    }};
+
+    // Step 2: Define the calibration factors for the sensors
+    std::array<float, 3> calibration_factors = {0.5, -0.3, 1.2};
+
+    // Step 3: Process each sensor's readings
+    for (int sensor = 0; sensor < 3; ++sensor) {
+        float total = 0; // To calculate the sum of calibrated readings
+
+        // Step 4: Calibrate each reading
+        for (int i = 0; i < 5; ++i) {
+            sensor_readings[sensor][i] += calibration_factors[sensor]; // Add calibration factor
+            total += sensor_readings[sensor][i]; // Add calibrated reading to the total
+        }
+
+        // Step 5: Calculate the average
+        float average = total / 5;
+
+        // Step 6: Display the result
+        std::cout << "Average calibrated reading for Sensor " 
+                  << (sensor + 1) << ": " << average << std::endl;
+    }
+
+    return 0;
+}
+
+
+#include <iostream>
 #include <array> // For std::array
 
 int main() {
