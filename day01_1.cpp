@@ -1,4 +1,59 @@
 #include <iostream>
+#include <vector>
+#include <algorithm> // For sort
+
+int main() {
+    // Step 1: Input scores from the user
+    std::vector<int> scores;
+    int score;
+    std::cout << "Enter scores (-1 to stop): ";
+    while (true) {
+        std::cin >> score;
+        if (score == -1) break; // Stop when -1 is entered
+        scores.push_back(score);
+    }
+
+    // Step 2: Sort scores in descending order using a basic comparison function
+    std::sort(scores.begin(), scores.end(), [](int a, int b) {
+        return a > b; // Sort in descending order
+    });
+
+    // Step 3: Display all scores
+    std::cout << "All Scores (Sorted): ";
+    for (size_t i = 0; i < scores.size(); ++i) {
+        std::cout << scores[i] << " ";
+    }
+    std::cout << std::endl;
+
+    // Step 4: Display top 3 scores
+    std::cout << "Top 3 Scores: ";
+    for (size_t i = 0; i < 3 && i < scores.size(); ++i) {
+        std::cout << scores[i] << " ";
+    }
+    std::cout << std::endl;
+
+    // Step 5: Remove duplicate scores manually
+    std::vector<int> unique_scores;
+    for (size_t i = 0; i < scores.size(); ++i) {
+        // Add score to unique_scores if it is not already present
+        if (unique_scores.empty() || scores[i] != unique_scores[unique_scores.size() - 1]) {
+            unique_scores.push_back(scores[i]);
+        }
+    }
+
+    // Step 6: Display unique scores
+    std::cout << "Unique Scores (Sorted): ";
+    for (size_t i = 0; i < unique_scores.size(); ++i) {
+        std::cout << unique_scores[i] << " ";
+    }
+    std::cout << std::endl;
+
+    return 0;
+}
+
+
+
+#include <iostream>
 
 // Function to calibrate sensor readings
 void calibrateSensor(float readings[], size_t size, float calibration_factor) {
