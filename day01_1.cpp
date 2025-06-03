@@ -1,4 +1,59 @@
 #include <iostream>
+#include <string>
+#include <algorithm>
+#include <vector>
+
+using namespace std;
+
+template<typename Container>
+int godNumber(const Container& s) {
+    int frequency[10] = {0};
+    
+    // Count frequency of each digit
+    for (auto ch : s) {
+        if (ch >= '0' && ch <= '9') {
+            frequency[ch - '0']++;
+        }
+    }
+
+    // Initialize max and min definite values
+    int maxDefiniteValue = -1; // Start with a value lower than any possible definite value
+    int minDefiniteValue = 1000; // Start with a value higher than any possible definite value
+
+    // Calculate definite values and update max/min
+    for (int digit = 0; digit <= 9; digit++) {
+        if (frequency[digit] > 0) {
+            int definiteValue = digit * frequency[digit];
+            maxDefiniteValue = max(maxDefiniteValue, definiteValue);
+            minDefiniteValue = min(minDefiniteValue, definiteValue);
+        }
+    }
+
+    // If only one digit type, return its definite value
+    if (maxDefiniteValue == minDefiniteValue) {
+        return maxDefiniteValue;
+    }
+
+    return maxDefiniteValue - minDefiniteValue;
+}
+
+int main() {
+    string s;
+    cin >> s;
+
+    cout << godNumber(s) << endl;
+
+    // Example usage with vector<char>
+    vector<char> chars(s.begin(), s.end());
+    cout << "God Number from vector<char>: " << godNumber(chars) << endl;
+
+    return 0;
+}
+
+
+
+
+#include <iostream>
 #include <vector>
 #include <string>
 #include <algorithm>
