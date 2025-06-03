@@ -1,4 +1,41 @@
 #include <iostream>
+#include <array> // For std::array
+
+int main() {
+    // Step 1: Define a 2D array to hold readings from 3 sensors, each with 5 readings
+    std::array<std::array<float, 5>, 3> sensor_readings = {{
+        {23.4, 22.7, 24.1, 23.9, 22.6}, // Sensor 1 readings
+        {19.8, 20.1, 19.6, 20.0, 19.7}, // Sensor 2 readings
+        {25.3, 25.6, 25.1, 26.0, 25.8}  // Sensor 3 readings
+    }};
+    
+    // Step 2: Define the calibration factors for each sensor
+    std::array<float, 3> calibration_factors = {0.5, -0.3, 1.2};
+
+    // Step 3: Process each sensor one by one
+    for (size_t sensor_idx = 0; sensor_idx < sensor_readings.size(); ++sensor_idx) {
+        float sum_calibrated = 0.0f; // To store the sum of calibrated readings
+
+        // Step 4: Apply the calibration factor to each reading
+        for (float& reading : sensor_readings[sensor_idx]) {
+            reading += calibration_factors[sensor_idx]; // Add the calibration factor
+            sum_calibrated += reading; // Add the calibrated reading to the sum
+        }
+
+        // Step 5: Calculate the average calibrated reading
+        float average = sum_calibrated / sensor_readings[sensor_idx].size();
+
+        // Step 6: Display the average
+        std::cout << "Average calibrated reading for Sensor " 
+                  << (sensor_idx + 1) << ": " << average << std::endl;
+    }
+
+    return 0;
+}
+
+
+
+#include <iostream>
 
 template <typename T, std::size_t Size>
 class MyArray {
