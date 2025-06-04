@@ -1,4 +1,79 @@
 #include <iostream>
+#include <vector>
+#include <string>
+
+// Custom function to convert a character to lowercase
+char toLowerChar(char ch) {
+    if (ch >= 'A' && ch <= 'Z') {
+        return ch + ('a' - 'A');
+    }
+    return ch;
+}
+
+// Custom function to convert a string to lowercase
+std::string toLowerString(const std::string& str) {
+    std::string lowerStr;
+    for (char ch : str) {
+        lowerStr += toLowerChar(ch);
+    }
+    return lowerStr;
+}
+
+// Custom function to sort a vector of strings lexicographically
+void sortStrings(std::vector<std::string>& vec) {
+    for (size_t i = 0; i < vec.size(); ++i) {
+        for (size_t j = i + 1; j < vec.size(); ++j) {
+            if (vec[i] > vec[j]) {
+                std::string temp = vec[i];
+                vec[i] = vec[j];
+                vec[j] = temp;
+            }
+        }
+    }
+}
+
+// Custom function to remove duplicates from a sorted vector
+void removeDuplicates(std::vector<std::string>& vec) {
+    std::vector<std::string> uniqueVec;
+    for (size_t i = 0; i < vec.size(); ++i) {
+        if (i == 0 || vec[i] != vec[i - 1]) {
+            uniqueVec.push_back(vec[i]);
+        }
+    }
+    vec = uniqueVec;
+}
+
+int main() {
+    // Input words
+    std::vector<std::string> words = {"Apple", "banana", "apple", "Orange", "BANANA", "grape"};
+
+    // Convert all words to lowercase
+    for (std::string& word : words) {
+        word = toLowerString(word);
+    }
+
+    // Sort the words
+    sortStrings(words);
+
+    // Remove duplicates
+    removeDuplicates(words);
+
+    // Print the result
+    std::cout << "[";
+    for (size_t i = 0; i < words.size(); ++i) {
+        std::cout << "\"" << words[i] << "\"";
+        if (i < words.size() - 1) {
+            std::cout << ", ";
+        }
+    }
+    std::cout << "]" << std::endl;
+
+    return 0;
+}
+
+
+
+#include <iostream>
 #include <list>
 #include <string>
 
