@@ -1,4 +1,38 @@
 #include <iostream>
+#include <set>
+
+int main() {
+    std::set<int> uniqueVisitors; // To store unique user IDs
+    std::string command;
+    int userId;
+
+    while (true) {
+        std::cout << "Enter command (VISIT user_id / UNIQUE / TOP / EXIT): ";
+        std::cin >> command;
+
+        if (command == "VISIT") {
+            std::cin >> userId;
+            uniqueVisitors.insert(userId); // Insert user ID into the set
+        } else if (command == "UNIQUE") {
+            std::cout << uniqueVisitors.size() << std::endl; // Print the count of unique visitors
+        } else if (command == "TOP") {
+            for (const int& id : uniqueVisitors) {
+                std::cout << id << " "; // Print user IDs in ascending order
+            }
+            std::cout << std::endl;
+        } else if (command == "EXIT") {
+            break; // Exit the loop
+        } else {
+            std::cout << "Invalid command. Try again." << std::endl;
+        }
+    }
+
+    return 0;
+}
+
+
+
+#include <iostream>
 #include <forward_list>
 #include <string>
 
