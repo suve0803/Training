@@ -154,6 +154,23 @@ forward stores the forward history for redo operations. When a new page is visit
 
 
 
+    void removeTask(std::list<std::string>& tasks, const std::string& task) {
+    bool found = false;
+    for (auto it = tasks.begin(); it != tasks.end(); /* no increment here */) {
+        if (*it == task) {
+            it = tasks.erase(it); // Erase returns an iterator to the next element
+            found = true;
+        } else {
+            ++it; // Move to the next element if no erasure
+        }
+    }
+
+    if (found) {
+        std::cout << "Removed task(s): " << task << std::endl;
+    } else {
+        std::cout << "Task not found: " << task << std::endl;
+    }
+}
 
 
 
