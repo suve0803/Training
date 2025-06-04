@@ -1,4 +1,42 @@
 #include <iostream>
+#include <forward_list>
+#include <string>
+
+// Function to clean messages starting with "DELETED:"
+void cleanMessages(std::forward_list<std::string>& messages) {
+    auto previous = messages.before_begin(); // Points before the start of the list
+    for (auto current = messages.begin(); current != messages.end(); ) {
+        // Check if the message starts with "DELETED:"
+        if (current->substr(0, 8) == "DELETED:") { 
+            current = messages.erase_after(previous); // Remove the current message
+        } else {
+            previous = current; // Move previous to current
+            ++current;          // Move current to the next element
+        }
+    }
+}
+
+int main() {
+    // Input chat history
+    std::forward_list<std::string> messages = {
+        "Hi", "Hello", "DELETED: Spam", "How are you?", "DELETED: Abuse"
+    };
+
+    // Clean deleted messages
+    cleanMessages(messages);
+
+    // Display the cleaned chat history
+    std::cout << "Cleaned Chat History:\n";
+    for (const std::string& message : messages) {
+        std::cout << message << "\n";
+    }
+
+    return 0;
+}
+
+
+
+#include <iostream>
 #include <vector>
 #include <string>
 
