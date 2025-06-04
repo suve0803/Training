@@ -1,4 +1,43 @@
 #include <iostream>
+#include <list>
+
+void bubbleSort(std::list<int>& list) {
+    bool swapped;
+    do {
+        swapped = false;
+        auto current = list.begin();
+        auto next = std::next(current);
+
+        while (next != list.end()) {
+            if (*current > *next) {
+                // Swap using a temporary variable
+                int temp = *current;
+                *current = *next;
+                *next = temp;
+
+                swapped = true;
+            }
+            current = next;
+            next = std::next(current);
+        }
+    } while(swapped);
+}
+
+int main() {
+    std::list<int> myList = {5, 2, 8, 1, 9, 4};
+    bubbleSort(myList);
+
+    // Output the sorted list
+    for (int num : myList) {
+        std::cout << num << " ";
+    }
+    std::cout << std::endl;
+
+    return 0;
+}
+
+
+#include <iostream>
 #include <string>
 #include <algorithm>
 #include <vector>
