@@ -1,3 +1,137 @@
+#include <iostream>
+#include <list>
+#include <string>
+
+int main() {
+    std::list<std::string> textBuffer;  // Text buffer
+    int cursorPosition = 0;             // Cursor position as an index
+    std::string command, line;
+
+    while (true) {
+        std::cout << "Enter command (INSERT/UP/DOWN/PRINT/EXIT): ";
+        std::cin >> command;
+
+        if (command == "INSERT") {
+            std::cin.ignore();          // Ignore leftover newline
+            std::cout << "Enter line to insert: ";
+            std::getline(std::cin, line);
+
+            auto it = textBuffer.begin();            // Find the current position
+            for (int i = 0; i < cursorPosition; ++i) {
+                ++it;
+            }
+
+            textBuffer.insert(it, line);             // Insert the line at the position
+            ++cursorPosition;                        // Move cursor after the inserted line
+        } 
+        else if (command == "UP") {
+            if (cursorPosition > 0) {                // Check if not at the top
+                --cursorPosition;                    // Move cursor up
+            } else {
+                std::cout << "Already at the top.\n";
+            }
+        } 
+        else if (command == "DOWN") {
+            if (cursorPosition < textBuffer.size()) { // Check if not at the bottom
+                ++cursorPosition;                    // Move cursor down
+            } else {
+                std::cout << "Already at the bottom.\n";
+            }
+        } 
+        else if (command == "PRINT") {
+            std::cout << "Text Buffer:\n";
+            for (const auto& line : textBuffer) {
+                std::cout << line << "\n";           // Print all lines
+            }
+        } 
+        else if (command == "EXIT") {
+            break;                                   // Exit the loop
+        } 
+        else {
+            std::cout << "Invalid command. Try again.\n";
+        }
+    }
+
+    return 0;
+}
+
+
+
+
+
+#include <iostream>
+#include <list>
+#include <string>
+
+class TextEditor {
+public:
+    TextEditor() : cursor_pos(0) {}
+
+    void insert(const std::string& text) {
+        // Advance to cursor position
+        auto it = getIteratorAt(cursor_pos);
+        lines.insert(it, text);
+        cursor_pos++; // Move cursor after inserted line
+    }
+
+    void moveUp() {
+        if (cursor_pos > 0) {
+            cursor_pos--;
+        }
+    }
+
+    void moveDown() {
+        if (cursor_pos < lines.size()) {
+            cursor_pos++;
+        }
+    }
+
+    void print() const {
+        for (const auto& line : lines) {
+            std::cout << line << "\n";
+        }
+    }
+
+private:
+    std::list<std::string> lines;
+    size_t cursor_pos; // Position of cursor in [0 .. lines.size()]
+
+    // Helper to get iterator at position pos by advancing from begin()
+    std::list<std::string>::iterator getIteratorAt(size_t pos) {
+        auto it = lines.begin();
+        for (size_t i = 0; i < pos; i++) {
+            ++it;
+        }
+        return it;
+    }
+};
+
+int main() {
+    TextEditor editor;
+    std::string command;
+
+    while (std::getline(std::cin, command)) {
+        if (command.find("INSERT ") == 0) {
+            std::string text = command.substr(7);
+            editor.insert(text);
+        } else if (command == "UP") {
+            editor.moveUp();
+        } else if (command == "DOWN") {
+            editor.moveDown();
+        } else if (command == "PRINT") {
+            editor.print();
+            break;
+        }
+    }
+
+    return 0;
+}
+
+
+
+
+
+
 problem 4: Sliding Window Logger (Beginner Version)
 
 #include <iostream>
