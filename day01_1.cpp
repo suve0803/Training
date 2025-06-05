@@ -1,5 +1,55 @@
 #include <iostream>
 #include <set>
+#include <string>
+
+int main() {
+    // Define the set of banned words
+    std::set<std::string> bannedWords = {"bad", "evil", "vulgar"};
+
+    // Input the text to filter
+    std::string text = "this is a bad example with evil words";
+
+    std::cout << "Original Text: " << text << std::endl;
+
+    std::string filteredText;
+    std::string currentWord;
+
+    // Process the text character by character
+    for (char ch : text) {
+        if (ch == ' ') {
+            // End of a word
+            if (!currentWord.empty() && bannedWords.find(currentWord) == bannedWords.end()) {
+                if (!filteredText.empty()) {
+                    filteredText += " ";
+                }
+                filteredText += currentWord;
+            }
+            currentWord.clear(); // Reset for the next word
+        } else {
+            // Add character to the current word
+            currentWord += ch;
+        }
+    }
+
+    // Handle the last word (if any)
+    if (!currentWord.empty() && bannedWords.find(currentWord) == bannedWords.end()) {
+        if (!filteredText.empty()) {
+            filteredText += " ";
+        }
+        filteredText += currentWord;
+    }
+
+    // Output the filtered text
+    std::cout << "Filtered Text: " << filteredText << std::endl;
+
+    return 0;
+}
+
+
+
+
+#include <iostream>
+#include <set>
 
 int main() {
     std::set<int> uniqueVisitors; // To store unique user IDs
