@@ -2,6 +2,44 @@
 #include <thread>
 #include <mutex>
 
+std::mutex mtx;
+bool pingTurn = true; // Shared flag to determine whose turn it is
+
+// Function to print "Ping" or "Pong"
+void printPingPong(const std::string& word, bool isPing) {
+    for (int i = 0; i < 10; ++i) {
+        while (true) { // Keep checking until it's this thread's turn
+            mtx.lock(); // Lock the mutex to safely access shared data
+            if (pingTurn == isPing) { // Check if it's this thread's turn
+                std::cout << word << " ";
+                pingTurn = !pingTurn; // Toggle the turn
+                mtx.unlock(); // Unlock the mutex before breaking
+                break; // Exit the loop after printing
+            }
+            mtx.unlock(); // Unlock the mutex if not this thread's turn
+        }
+    }
+}
+
+int main() {
+    // Create two threads for Ping and Pong
+    std::thread t1(printPingPong, "Ping", true);  // Ping thread
+    std::thread t2(printPingPong, "Pong", false); // Pong thread
+
+    // Wait for both threads to finish
+    t1.join();
+    t2.join();
+
+    return 0;
+}
+
+
+
+
+#include <iostream>
+#include <thread>
+#include <mutex>
+
 int counter = 0;
 std::mutex mtx;
 
