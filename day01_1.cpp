@@ -7,6 +7,158 @@
 #include <mutex>
 #include <condition_variable>
 #include <chrono>
+#include <stdexcept>
+
+class Task {
+public:
+    Task(const std::string& id, int load) : id(id), load(load) {}
+
+    std::string getId() const {
+        return id;
+    }
+
+    int getLoad() const {
+        return load;
+    }
+
+    // Comparison operator for priority queue
+    bool operator<(const Task& other) const {
+        return load < other.load; // Higher load has higher priority
+    }
+
+private:
+    std::string id;
+    int load;
+};
+
+class TaskQueue {
+public:
+    void push(Task task) {
+        {
+            std::lock_guard<std::mutex> lock(mtx);
+            tasks.push(task);
+        }
+        cv.notify_one();
+    }
+
+    Task pop() {
+        std::lock_guard<std::mutex> lock(mtx);
+        if (tasks.empty()) {
+            throw std::runtime_error("No tasks available"); // Throw exception if empty
+        }
+        Task task = tasks.top();
+        tasks.pop();
+        return task;
+    }
+
+    void waitForTask() {
+        while (true) {
+            {
+                std::lock_guard<std::mutex> lock(mtx);
+                if (!tasks.empty()) {
+                    return; // Exit if tasks are available
+                }
+            }
+            // Busy wait until a task is available
+            std::this_thread::sleep_for(std::chrono::milliseconds(10)); // Sleep briefly to avoid busy-waiting too aggressively
+        }
+    }
+
+private:
+    std::priority_queue<Task> tasks; // Use priority queue for tasks
+    std::mutex mtx;
+    std::condition_variable cv;
+};
+
+class LoadBalancer {
+public:
+    LoadBalancer(const std::string& filename) {
+        readTasksFromFile(filename);
+    }
+
+    void start(int cpuCount) {
+        // Create CPU threads
+        for (int i = 1; i <= cpuCount; ++i) {
+            cpus.emplace_back(&LoadBalancer::cpuWorker, this, i);
+        }
+
+        // Wait for all threads to finish
+        for (auto &cpu : cpus) {
+            cpu.join();
+        }
+
+        std::cout << "All tasks completed.\n";
+    }
+
+private:
+    std::vector<std::thread> cpus;
+    TaskQueue taskQueue;
+
+    void readTasksFromFile(const std::string& filename) {
+        std::ifstream inputFile(filename);
+        if (!inputFile.is_open()) {
+            std::cerr << "Error opening input file.\n";
+            exit(1);
+        }
+
+        std::string line;
+        int cpuCount = 0;
+
+        // Read CPU count
+        std::getline(inputFile, line);
+        std::istringstream(line.substr(6)) >> cpuCount;
+
+        // Read tasks
+        while (std::getline(inputFile, line)) {
+            std::string taskId = line.substr(0, line.find(':'));
+            int load = std::stoi(line.substr(line.find_last_of(' ') + 1));
+            taskQueue.push(Task(taskId, load));
+        }
+
+        inputFile.close();
+    }
+
+    void cpuWorker(int cpuId) {
+        while (true) {
+            Task task("", 0); // Create a default task
+
+            // Wait for a task to be available
+            taskQueue.waitForTask();
+
+            try {
+                // Attempt to pop a task
+                task = taskQueue.pop();
+            } catch (const std::runtime_error& e) {
+                break; // Exit if no more tasks
+            }
+
+            // Simulate task processing
+            std::cout << "CPU-" << cpuId << " picked Task " << task.getId() << " (Load: " << task.getLoad() << ")\n";
+            std::this_thread::sleep_for(std::chrono::seconds(task.getLoad()));
+            std::cout << "CPU-" << cpuId << " finished Task " << task.getId() << "\n";
+        }
+    }
+};
+
+int main() {
+    LoadBalancer loadBalancer("input.txt");
+    loadBalancer.start(3); // Start with 3 CPUs (or read from the file)
+    return 0;
+}
+
+
+
+
+
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <thread>
+#include <queue>
+#include <mutex>
+#include <condition_variable>
+#include <chrono>
 
 struct Task {
     std::string id;
