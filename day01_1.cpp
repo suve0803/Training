@@ -13,6 +13,208 @@ private:
     double minPrice;
     double highestBid;
     std::string highestBidder;
+    std::mutex auctionMutex; // To handle concurrent bids safely
+
+public:
+    Auction(const std::string& itemName, double minPrice)
+        : itemName(itemName), minPrice(minPrice), highestBid(0), highestBidder("None") {}
+
+    // Method to place a bid
+    bool placeBid(const std::string& bidderName, double bidAmount, std::ofstream& logFile) {
+        std::lock_guard<std::mutex> lock(auctionMutex); // Lock to prevent race conditions
+
+        // Check if auction is already closed
+        if (highestBidder == "CLOSED") {
+            logFile << "[INFO] Auction is closed. Bid rejected for item: " << itemName << "\n";
+            return false;
+        }
+
+        // Check if bid is too low
+        if (bidAmount <= highestBid || bidAmount < minPrice) {
+            logFile << "[INFO] Bid too low. Bid rejected for item: " << itemName << "\n";
+            return false;
+        }
+
+        // Update the highest bid and bidder
+        highestBid = bidAmount;
+        highestBidder = bidderName;
+        logFile << "[SUCCESS] Bid placed! " << bidderName << " is leading with $" 
+                << bidAmount << " on item: " << itemName << "\n";
+        return true;
+    }
+
+    // Method to close the auction
+    void closeAuction(std::ofstream& logFile) {
+        std::lock_guard<std::mutex> lock(auctionMutex);
+
+        // If already closed, log and return
+        if (highestBidder == "CLOSED") {
+            logFile << "[INFO] Auction already closed for item: " << itemName << "\n";
+            return;
+        }
+
+        // Log the auction result
+        if (highestBidder == "None") {
+            logFile << "[RESULT] Auction closed for item: " << itemName << ". No bids placed.\n";
+        } else {
+            logFile << "[RESULT] Auction closed for item: " << itemName 
+                    << ". Winner: " << highestBidder << " with bid: $" << highestBid << "\n";
+        }
+
+        highestBidder = "CLOSED"; // Mark the auction as closed
+    }
+};
+
+// AuctionManager class
+class AuctionManager {
+private:
+    std::map<std::string, Auction> auctions; // Stores all auctions
+    std::ofstream logFile;
+
+public:
+    AuctionManager(const std::string& logFileName) {
+        logFile.open(logFileName, std::ios::app);
+        if (!logFile.is_open()) {
+            std::cerr << "Error: Could not open log file. Exiting...\n";
+            exit(1);
+        }
+    }
+
+    ~AuctionManager() {
+        if (logFile.is_open()) {
+            logFile.close();
+        }
+    }
+
+    void addAuction(const std::string& auctionID, const std::string& itemName, double minPrice) {
+        if (auctions.find(auctionID) != auctions.end()) {
+            std::cout << "[ERROR] Auction ID already exists.\n";
+            logFile << "[ERROR] Failed to add auction. Duplicate Auction ID: " << auctionID << "\n";
+            return;
+        }
+
+        auctions[auctionID] = Auction(itemName, minPrice);
+        logFile << "[INFO] Auction added: " << itemName 
+                << " (ID: " << auctionID << ") with minimum price $" << minPrice << "\n";
+        std::cout << "Auction added successfully: " << itemName << " with minimum price $" << minPrice << "\n";
+    }
+
+    void placeBid(const std::string& auctionID, const std::string& bidderName, double bidAmount) {
+        auto it = auctions.find(auctionID);
+        if (it != auctions.end()) {
+            it->second.placeBid(bidderName, bidAmount, logFile);
+        } else {
+            std::cout << "[ERROR] Invalid auction ID. Bid not placed.\n";
+        }
+    }
+
+    void startAuctionTimer(const std::string& auctionID, int seconds) {
+        if (auctions.find(auctionID) == auctions.end()) {
+            std::cout << "[ERROR] Invalid auction ID. Timer not started.\n";
+            return;
+        }
+
+        std::thread([this, auctionID, seconds]() {
+            std::this_thread::sleep_for(std::chrono::seconds(seconds));
+            auctions[auctionID].closeAuction(logFile);
+        }).detach(); // Detach to run independently
+    }
+
+    void viewLog() {
+        std::ifstream log("auction_log.txt");
+        if (!log.is_open()) {
+            std::cout << "[ERROR] Could not open log file for viewing.\n";
+            return;
+        }
+
+        std::string line;
+        while (std::getline(log, line)) {
+            std::cout << line << "\n";
+        }
+    }
+};
+
+// Simple CLI
+void auctionCLI() {
+    AuctionManager manager("auction_log.txt");
+    int choice;
+
+    do {
+        std::cout << "\nMenu:\n"
+                  << "1. Add Auction\n"
+                  << "2. Place Bid\n"
+                  << "3. Start Auction Timer\n"
+                  << "4. View Logs\n"
+                  << "5. Exit\n"
+                  << "Enter your choice: ";
+        std::cin >> choice;
+
+        if (choice == 1) {
+            std::string id, name;
+            double price;
+            std::cout << "Enter Auction ID: ";
+            std::cin >> id;
+            std::cout << "Enter Item Name: ";
+            std::cin.ignore();
+            std::getline(std::cin, name);
+            std::cout << "Enter Minimum Price: ";
+            std::cin >> price;
+            manager.addAuction(id, name, price);
+        } else if (choice == 2) {
+            std::string id, bidder;
+            double amount;
+            std::cout << "Enter Auction ID: ";
+            std::cin >> id;
+            std::cout << "Enter Bidder Name: ";
+            std::cin >> bidder;
+            std::cout << "Enter Bid Amount: ";
+            std::cin >> amount;
+            manager.placeBid(id, bidder, amount);
+        } else if (choice == 3) {
+            std::string id;
+            int duration;
+            std::cout << "Enter Auction ID: ";
+            std::cin >> id;
+            std::cout << "Enter Timer Duration (in seconds): ";
+            std::cin >> duration;
+            manager.startAuctionTimer(id, duration);
+        } else if (choice == 4) {
+            manager.viewLog();
+        } else if (choice == 5) {
+            std::cout << "Exiting program. Goodbye!\n";
+        } else {
+            std::cout << "[ERROR] Invalid choice. Please try again.\n";
+        }
+    } while (choice != 5);
+}
+
+// Main function
+int main() {
+    auctionCLI();
+    return 0;
+}
+
+
+
+
+
+
+
+#include <iostream>
+#include <string>
+#include <map>
+#include <fstream>
+#include <mutex>
+#include <thread>
+#include <chrono>
+
+// Auction class
+class Auction {
+private:
+    std::string itemName;
+    double minPrice;
+    double highestBid;
+    std::string highestBidder;
     std::mutex auctionMutex;
 
 public:
