@@ -1,5 +1,117 @@
 #include <iostream>
 #include <fstream>
+#include <sstream>
+#include <vector>
+#include <thread>
+#include <queue>
+#include <mutex>
+#include <condition_variable>
+#include <chrono>
+
+struct Task {
+    std::string id;
+    int load;
+};
+
+class TaskQueue {
+public:
+    void push(Task task) {
+        {
+            std::lock_guard<std::mutex> lock(mtx);
+            tasks.push(task);
+        }
+        cv.notify_one();
+    }
+
+    bool pop(Task &task) {
+        std::lock_guard<std::mutex> lock(mtx);
+        if (tasks.empty()) {
+            return false;
+        }
+        task = tasks.front();
+        tasks.pop();
+        return true;
+    }
+
+    bool isEmpty() {
+        std::lock_guard<std::mutex> lock(mtx);
+        return tasks.empty();
+    }
+
+    void waitForTask() {
+        std::unique_lock<std::mutex> lock(mtx);
+        cv.wait(lock, [this] { return !tasks.empty(); });
+    }
+
+private:
+    std::queue<Task> tasks;
+    std::mutex mtx;
+    std::condition_variable cv;
+};
+
+void cpuWorker(int cpuId, TaskQueue &taskQueue) {
+    while (true) {
+        Task task;
+
+        // Wait for a task to be available
+        taskQueue.waitForTask();
+
+        // Attempt to pop a task
+        if (!taskQueue.pop(task)) {
+            break; // Exit if no more tasks
+        }
+
+        // Simulate task processing
+        std::cout << "CPU-" << cpuId << " picked Task " << task.id << " (Load: " << task.load << ")\n";
+        std::this_thread::sleep_for(std::chrono::seconds(task.load));
+        std::cout << "CPU-" << cpuId << " finished Task " << task.id << "\n";
+    }
+}
+
+int main() {
+    std::ifstream inputFile("input.txt");
+    if (!inputFile.is_open()) {
+        std::cerr << "Error opening input file.\n";
+        return 1;
+    }
+
+    std::string line;
+    int cpuCount = 0;
+    TaskQueue taskQueue;
+
+    // Read CPU count
+    std::getline(inputFile, line);
+    std::istringstream(line.substr(6)) >> cpuCount;
+
+    // Read tasks
+    while (std::getline(inputFile, line)) {
+        std::string taskId = line.substr(0, line.find(':'));
+        int load = std::stoi(line.substr(line.find_last_of(' ') + 1));
+        taskQueue.push({taskId, load});
+    }
+
+    inputFile.close();
+
+    // Create CPU threads
+    std::vector<std::thread> cpus;
+    for (int i = 1; i <= cpuCount; ++i) {
+        cpus.emplace_back(cpuWorker, i, std::ref(taskQueue));
+    }
+
+    // Wait for all threads to finish
+    for (auto &cpu : cpus) {
+        cpu.join();
+    }
+
+    std::cout << "All tasks completed.\n";
+    return 0;
+}
+
+
+
+
+#include <iostream>
+#include <fstream>
 #include <queue>
 #include <thread>
 #include <mutex>
