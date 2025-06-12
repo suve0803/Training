@@ -1,4 +1,157 @@
 #include <iostream>
+#include <unordered_map>
+#include <set>
+#include <vector>
+#include <string>
+#include <mutex>
+#include <queue>
+
+// Auction Class
+class Auction {
+private:
+    std::string itemName;
+    double minPrice;
+    double highestBid = 0.0;
+    std::string highestBidder = "None";
+    std::mutex auctionMutex;
+
+    std::priority_queue<std::pair<double, std::string>> bids; // Stores all bids
+
+public:
+    Auction(const std::string& name, double price) : itemName(name), minPrice(price) {}
+
+    bool placeBid(const std::string& bidderName, double bidAmount) {
+        std::lock_guard<std::mutex> lock(auctionMutex); // Lock for thread safety
+
+        if (bidAmount <= highestBid || bidAmount < minPrice) {
+            std::cout << "Bid too low for item: " << itemName << "\n";
+            return false;
+        }
+
+        highestBid = bidAmount;
+        highestBidder = bidderName;
+        bids.push({bidAmount, bidderName});
+        std::cout << "Bid placed by " << bidderName << " for $" << bidAmount << " on " << itemName << "\n";
+        return true;
+    }
+
+    void closeAuction() {
+        std::lock_guard<std::mutex> lock(auctionMutex);
+
+        if (highestBidder == "None") {
+            std::cout << "Auction closed for " << itemName << ". No bids were placed.\n";
+        } else {
+            std::cout << "Auction closed for " << itemName << ". Winner: " << highestBidder
+                      << " with a bid of $" << highestBid << "\n";
+        }
+    }
+};
+
+// Auction Manager Class
+class AuctionManager {
+private:
+    std::unordered_map<std::string, Auction> auctions; // Store all auctions
+    std::set<std::string> completedAuctions; // Track completed auctions
+
+public:
+    void addAuction(const std::string& id, const std::string& name, double minPrice) {
+        if (auctions.find(id) != auctions.end()) {
+            std::cout << "Auction ID already exists.\n";
+            return;
+        }
+        auctions[id] = Auction(name, minPrice);
+        std::cout << "Auction added for item: " << name << " with minimum price $" << minPrice << "\n";
+    }
+
+    void placeBid(const std::string& id, const std::string& bidderName, double bidAmount) {
+        auto it = auctions.find(id);
+        if (it == auctions.end()) {
+            std::cout << "Auction ID not found.\n";
+            return;
+        }
+        it->second.placeBid(bidderName, bidAmount);
+    }
+
+    void closeAuction(const std::string& id) {
+        auto it = auctions.find(id);
+        if (it == auctions.end()) {
+            std::cout << "Auction ID not found.\n";
+            return;
+        }
+        it->second.closeAuction();
+        completedAuctions.insert(id);
+        auctions.erase(it); // Remove auction once closed
+    }
+
+    void showCompletedAuctions() {
+        std::cout << "Completed Auctions:\n";
+        for (const auto& id : completedAuctions) {
+            std::cout << "- " << id << "\n";
+        }
+    }
+};
+
+// Simple Auction CLI
+void auctionCLI() {
+    AuctionManager manager;
+    int choice;
+
+    do {
+        std::cout << "\nAuction Menu:\n"
+                  << "1. Add Auction\n"
+                  << "2. Place Bid\n"
+                  << "3. Close Auction\n"
+                  << "4. Show Completed Auctions\n"
+                  << "5. Exit\n"
+                  << "Enter your choice: ";
+        std::cin >> choice;
+
+        if (choice == 1) {
+            std::string id, name;
+            double price;
+            std::cout << "Enter Auction ID: ";
+            std::cin >> id;
+            std::cin.ignore(); // Clear newline
+            std::cout << "Enter Item Name: ";
+            std::getline(std::cin, name);
+            std::cout << "Enter Minimum Price: ";
+            std::cin >> price;
+            manager.addAuction(id, name, price);
+        } else if (choice == 2) {
+            std::string id, bidder;
+            double amount;
+            std::cout << "Enter Auction ID: ";
+            std::cin >> id;
+            std::cout << "Enter Bidder Name: ";
+            std::cin >> bidder;
+            std::cout << "Enter Bid Amount: ";
+            std::cin >> amount;
+            manager.placeBid(id, bidder, amount);
+        } else if (choice == 3) {
+            std::string id;
+            std::cout << "Enter Auction ID: ";
+            std::cin >> id;
+            manager.closeAuction(id);
+        } else if (choice == 4) {
+            manager.showCompletedAuctions();
+        } else if (choice == 5) {
+            std::cout << "Goodbye!\n";
+        } else {
+            std::cout << "Invalid choice. Try again.\n";
+        }
+    } while (choice != 5);
+}
+
+int main() {
+    auctionCLI();
+    return 0;
+}
+
+
+
+
+
+#include <iostream>
 #include <string>
 #include <map>
 #include <fstream>
