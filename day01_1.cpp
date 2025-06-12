@@ -1,3 +1,116 @@
+#include <iostream>
+#include <fstream>
+#include <queue>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <chrono>
+#include <string>
+#include <sstream>
+
+struct Task {
+    std::string id;
+    int load;
+};
+
+std::queue<Task> taskQueue;
+std::mutex queueMutex;
+std::condition_variable queueCV;
+bool tasksRemaining = true;
+
+void cpuWorker(int cpuId) {
+    while (true) {
+        Task currentTask;
+        bool hasTask = false;
+
+        // Fetch task from queue
+        {
+            std::lock_guard<std::mutex> lock(queueMutex);
+            if (!taskQueue.empty()) {
+                currentTask = taskQueue.front();
+                taskQueue.pop();
+                hasTask = true;
+            } else if (!tasksRemaining) {
+                return;
+            }
+        }
+
+        if (hasTask) {
+            // Log task assignment
+            std::cout << "CPU-" << cpuId << " picked Task " << currentTask.id
+                      << " (Load: " << currentTask.load << ")\n";
+
+            // Simulate task execution
+            std::this_thread::sleep_for(std::chrono::seconds(currentTask.load));
+
+            // Log task completion
+            std::cout << "CPU-" << cpuId << " finished Task " << currentTask.id << "\n";
+
+            // Notify other threads that may be waiting for tasks
+            queueCV.notify_all();
+        } else {
+            // If no task was available, wait for notification
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+    }
+}
+
+int main() {
+    std::ifstream inputFile("input.txt");
+    if (!inputFile) {
+        std::cerr << "Error: Unable to open input file.\n";
+        return 1;
+    }
+
+    int cpuCount = 0;
+    std::string line;
+
+    // Parse CPU count
+    std::getline(inputFile, line);
+    std::istringstream cpuStream(line);
+    cpuStream.ignore(6); // Skip "CPUs: "
+    cpuStream >> cpuCount;
+
+    // Parse tasks
+    while (std::getline(inputFile, line)) {
+        std::istringstream taskStream(line);
+        Task task;
+        std::string loadStr;
+
+        std::getline(taskStream, task.id, ':');
+        taskStream.ignore(6); // Skip " Load "
+        taskStream >> task.load;
+
+        taskQueue.push(task);
+    }
+
+    inputFile.close();
+
+    // Launch CPU threads
+    std::vector<std::thread> threads;
+    for (int i = 1; i <= cpuCount; ++i) {
+        threads.emplace_back(cpuWorker, i);
+    }
+
+    // Wait for all tasks to be assigned
+    {
+        std::lock_guard<std::mutex> lock(queueMutex);
+        tasksRemaining = false;
+    }
+    queueCV.notify_all();
+
+    // Wait for threads to complete
+    for (auto& thread : threads) {
+        thread.join();
+    }
+
+    std::cout << "All tasks completed.\n";
+    return 0;
+}
+
+
+
+
 #include<iostream>
 #include<thread>
 #include<mutex>
