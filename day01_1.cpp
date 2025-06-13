@@ -4,6 +4,8 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <thread>
+#include <mutex>
 
 using namespace std;
 
@@ -105,13 +107,11 @@ public:
         }
     }
 
-    void generateReports() const {
+    void generateCustomerBillingReport() const {
         unordered_map<string, unordered_map<string, double>> customerData;
-        unordered_map<string, unordered_map<string, double>> operatorData;
 
         for (const auto& record : records) {
             string customerKey = record.msisdn + "|" + record.operatorBrand;
-            string operatorKey = record.operatorMNC;
 
             if (record.callType == "MOC") {
                 customerData[customerKey]["Outgoing Voice"] += record.duration;
@@ -125,6 +125,22 @@ public:
                 customerData[customerKey]["Download"] += record.download;
                 customerData[customerKey]["Upload"] += record.upload;
             }
+        }
+
+        for (const auto& customer : customerData) {
+            cout << "# Customer Data Base: " << customer.first << endl;
+            for (const auto& service : customer.second) {
+                cout << "  " << service.first << ": " << service.second << endl;
+            }
+            cout << endl;
+        }
+    }
+
+    void generateInteroperatorBillingReport() const {
+        unordered_map<string, unordered_map<string, double>> operatorData;
+
+        for (const auto& record : records) {
+            string operatorKey = record.operatorMNC;
 
             if (record.callType == "MOC") {
                 operatorData[operatorKey]["Outgoing Voice"] += record.duration;
@@ -138,14 +154,6 @@ public:
                 operatorData[operatorKey]["Download"] += record.download;
                 operatorData[operatorKey]["Upload"] += record.upload;
             }
-        }
-
-        for (const auto& customer : customerData) {
-            cout << "# Customer Data Base: " << customer.first << endl;
-            for (const auto& service : customer.second) {
-                cout << "  " << service.first << ": " << service.second << endl;
-            }
-            cout << endl;
         }
 
         for (const auto& op : operatorData) {
@@ -164,7 +172,7 @@ int main() {
 
     int choice;
     do {
-        cout << "1. Sign Up\n2. Login\n3. Exit\nEnter choice: ";
+        cout << "\n1. Sign Up\n2. Login\n3. Exit\nEnter choice: ";
         cin >> choice;
         switch (choice) {
             case 1: {
@@ -185,31 +193,63 @@ int main() {
                 cin >> password;
                 if (userManager.authenticateUser(username, password)) {
                     cout << "Login successful!" << endl;
+
                     CDRProcessor processor;
-                    int loggedInChoice;
+                    string filename;
+                    cout << "Enter CDR file name: ";
+                    cin >> filename;
+                    processor.parseCDRFile(filename);
+
+                    int billingChoice;
                     do {
-                        cout << "\n1. Process CDR file\n2. Print/Search for Billing Information\n3. Logout\nchoice: ";
-                        cin >> loggedInChoice;
-                        switch (loggedInChoice) {
+                        cout << "\n1. Process CDR file\n2. Print/Search for Billing Information\n3. Logout\nChoice: ";
+                        cin >> billingChoice;
+
+                        switch (billingChoice) {
                             case 1: {
-                                string filename;
-                                cout << "Enter CDR file name: ";
-                                cin >> filename;
-                                processor.parseCDRFile(filename);
-                                processor.generateReports();
+                                thread customerBillingThread([&]() {
+                                    processor.generateCustomerBillingReport();
+                                });
+
+                                thread interoperatorBillingThread([&]() {
+                                    processor.generateInteroperatorBillingReport();
+                                });
+
+                                customerBillingThread.join();
+                                interoperatorBillingThread.join();
+
+                                cout << "Both billing processes completed successfully." << endl;
                                 break;
                             }
                             case 2: {
-                                cout << "Billing information feature not implemented yet.\n";
+                                int displayChoice;
+                                do {
+                                    cout << "\n1. Customer Billing\n2. Interoperator Settlement Billing\n3. Back\nChoice: ";
+                                    cin >> displayChoice;
+
+                                    switch (displayChoice) {
+                                        case 1:
+                                            processor.generateCustomerBillingReport();
+                                            break;
+                                        case 2:
+                                            processor.generateInteroperatorBillingReport();
+                                            break;
+                                        case 3:
+                                            cout << "Returning to main menu..." << endl;
+                                            break;
+                                        default:
+                                            cout << "Invalid choice! Please try again." << endl;
+                                    }
+                                } while (displayChoice != 3);
                                 break;
                             }
                             case 3:
-                                cout << "Logging out...\n";
+                                cout << "Logging out..." << endl;
                                 break;
                             default:
-                                cout << "Invalid choice! Please try again.\n";
+                                cout << "Invalid choice! Please try again." << endl;
                         }
-                    } while (loggedInChoice != 3);
+                    } while (billingChoice != 3);
                 } else {
                     cout << "Invalid credentials!" << endl;
                 }
