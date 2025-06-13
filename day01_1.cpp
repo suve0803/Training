@@ -13,6 +13,10 @@ private:
     string password;
 
 public:
+    // Default constructor
+    User() = default;
+
+    // Parameterized constructor
     User(const string& user, const string& pass) : username(user), password(pass) {}
 
     string getUsername() const {
